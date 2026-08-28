@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace UniFileManager\Core\Services;
 
 use Illuminate\Filesystem\FilesystemAdapter;
+use League\Flysystem\DirectoryAttributes;
+use Symfony\Component\Mime\MimeTypes;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -45,31 +47,43 @@ final class FileManager
         $relativePath = $this->normalisePath($path);
         $this->authorize($user, 'view', $relativePath);
 
+        // One listing call for the whole directory instead of a metadata call
+        // per entry. `directories()` + `files()` + size/lastModified/mimeType
+        // each cost a round trip, which on an object store meant 3N requests:
+        // a 200-file folder took over three minutes and the page 504'd. The
+        // listing already carries size and last-modified for every entry.
         $items = [];
-        foreach ($this->disk()->directories($this->absolutePath($relativePath)) as $directory) {
-            if ($this->isHiddenName(basename($directory))) {
-                continue;
-            }
-            $items[] = [
-                'name' => basename($directory),
-                'path' => $this->relativeFromAbsolute($directory),
-                'type' => 'directory',
-                'modified_at' => $this->disk()->lastModified($directory),
-            ];
-        }
 
-        foreach ($this->disk()->files($this->absolutePath($relativePath)) as $file) {
-            if ($this->isHiddenName(basename($file))) {
+        foreach ($this->disk()->getDriver()->listContents($this->absolutePath($relativePath), false) as $attributes) {
+            $name = basename($attributes->path());
+
+            if ($this->isHiddenName($name)) {
                 continue;
             }
 
+            if ($attributes instanceof DirectoryAttributes) {
+                $items[] = [
+                    'name' => $name,
+                    'path' => $this->relativeFromAbsolute($attributes->path()),
+                    'type' => 'directory',
+                    // A prefix on S3/R2 is not an object and has no timestamp.
+                    'modified_at' => $attributes->lastModified(),
+                ];
+
+                continue;
+            }
+
             $items[] = [
-                'name' => basename($file),
-                'path' => $this->relativeFromAbsolute($file),
+                'name' => $name,
+                'path' => $this->relativeFromAbsolute($attributes->path()),
                 'type' => 'file',
-                'size' => $this->disk()->size($file),
-                'modified_at' => $this->disk()->lastModified($file),
-                'mime_type' => $this->disk()->mimeType($file),
+                'size' => $attributes->fileSize(),
+                'modified_at' => $attributes->lastModified(),
+                // S3 list responses omit content type, so fall back to the
+                // extension rather than spend a HEAD request per file on it.
+                'mime_type' => $attributes->mimeType()
+                    ?? MimeTypes::getDefault()->getMimeTypes(pathinfo($name, PATHINFO_EXTENSION))[0]
+                    ?? null,
             ];
         }
 

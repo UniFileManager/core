@@ -1,54 +1,57 @@
 {
-  "name": "unifilemanager/core",
-  "description": "Shared file management services for UniFileManager adapters.",
-  "type": "library",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "Sampath Arachchige",
-      "role": "Maintainer"
+    "name": "unifilemanager/core",
+    "description": "Shared file management services for UniFileManager adapters.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sampath Arachchige",
+            "role": "Maintainer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "illuminate/filesystem": "^11.0|^12.0|^13.0",
+        "symfony/http-foundation": "^7.0|^8.0",
+        "symfony/http-kernel": "^7.0|^8.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.24",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0",
+        "pestphp/pest-plugin-laravel": "^3.0|^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "UniFileManager\\Core\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "UniFileManager\\Core\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "UniFileManager\\Core\\UniFileManagerServiceProvider"
+            ]
+        },
+        "branch-alias": {
+            "dev-kamalia": "0.1.x-dev"
+        }
+    },
+    "scripts": {
+        "test": "pest --configuration=phpunit.xml --cache-directory=.pest-cache",
+        "lint": "pint --test",
+        "format": "pint"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     }
-  ],
-  "require": {
-    "php": "^8.2",
-    "illuminate/contracts": "^11.0|^12.0|^13.0",
-    "illuminate/filesystem": "^11.0|^12.0|^13.0",
-    "symfony/http-foundation": "^7.0|^8.0",
-    "symfony/http-kernel": "^7.0|^8.0"
-  },
-  "require-dev": {
-    "laravel/pint": "^1.24",
-    "orchestra/testbench": "^9.0|^10.0|^11.0",
-    "pestphp/pest": "^3.0|^4.0",
-    "pestphp/pest-plugin-laravel": "^3.0|^4.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "UniFileManager\\Core\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "UniFileManager\\Core\\Tests\\": "tests/"
-    }
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "UniFileManager\\Core\\UniFileManagerServiceProvider"
-      ]
-    }
-  },
-  "scripts": {
-    "test": "pest --configuration=phpunit.xml --cache-directory=.pest-cache",
-    "lint": "pint --test",
-    "format": "pint"
-  },
-  "minimum-stability": "stable",
-  "prefer-stable": true,
-  "config": {
-    "allow-plugins": {
-      "pestphp/pest-plugin": true
-    }
-  }
 }
