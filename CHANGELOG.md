@@ -4,6 +4,15 @@ All notable changes to UniFileManager Core are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## v0.1.4 - 2026-08-28
+
+### Fixed
+- Optimized S3-compatible and object-store directory listings by using Flysystem listing metadata instead of making extra metadata calls per entry.
+- Added safer file-attribute handling for object-store listings.
+- Added MIME type fallback support for object-store listings that do not return a MIME type.
+
+Thanks to @FaizAhmadSE for contributing the original object-store listing optimization work.
+
 ## v0.1.3 - 2026-08-10
 
 ### Fixed
