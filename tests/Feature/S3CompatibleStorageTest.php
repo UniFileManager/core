@@ -47,6 +47,29 @@ it('manages private files on an S3 compatible disk within the configured root', 
         ->and($manager->publicUrl((object) ['id' => 1], 'contracts/terms.txt'))->toBeNull();
 });
 
+it('lists object-store files with metadata from the directory listing response', function (): void {
+    config()->set('unifilemanager.storage_areas.private', [
+        'enabled' => true,
+        'disk' => 'testing_s3_compatible',
+        'root' => 'applications/acme/private',
+        'visibility' => 'private',
+    ]);
+
+    Storage::disk('testing_s3_compatible')->put('applications/acme/private/report.pdf', 'terms');
+
+    $items = app(FileManager::class)->list((object) ['id' => 1]);
+
+    expect($items)->toHaveCount(1)
+        ->and($items[0])->toMatchArray([
+            'name' => 'report.pdf',
+            'path' => 'report.pdf',
+            'type' => 'file',
+            'mime_type' => 'application/pdf',
+        ])
+        ->and($items[0]['size'])->toBe(5)
+        ->and($items[0]['modified_at'])->toBeInt();
+});
+
 it('uploads files to an S3 compatible disk using the storage area visibility', function (): void {
     config()->set('unifilemanager.storage_areas.private', [
         'enabled' => true,

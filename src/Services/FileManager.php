@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace UniFileManager\Core\Services;
 
 use Illuminate\Filesystem\FilesystemAdapter;
-use League\Flysystem\DirectoryAttributes;
-use Symfony\Component\Mime\MimeTypes;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\FileAttributes;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Mime\MimeTypes;
 use UniFileManager\Core\Contracts\FileManagerAuthorizer;
 use UniFileManager\Core\Contracts\StorageAreaResolver;
 use UniFileManager\Core\Exceptions\FolderNotEmpty;
@@ -70,6 +71,10 @@ final class FileManager
                     'modified_at' => $attributes->lastModified(),
                 ];
 
+                continue;
+            }
+
+            if (! $attributes instanceof FileAttributes) {
                 continue;
             }
 
