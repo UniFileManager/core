@@ -179,6 +179,58 @@ final class FileManager
         $this->disk()->delete($absolutePath);
     }
 
+    /**
+     * Delete a folder and all of its contents after authorizing the complete tree.
+     *
+     * The authorization preflight is intentionally completed before any storage
+     * mutation so a denied descendant cannot result in a partially deleted tree.
+     */
+    public function deleteFolder(mixed $user, string $path): void
+    {
+        $path = $this->normalisePath($path);
+        if ($path === '') {
+            throw new InvalidFilePath('The configured root cannot be deleted.');
+        }
+
+        $this->authorize($user, 'delete', $path);
+        $absolutePath = $this->absolutePath($path);
+
+        if (! $this->disk()->directoryExists($absolutePath)) {
+            throw new InvalidFilePath('The selected item is not a folder.');
+        }
+
+        $files = $this->disk()->allFiles($absolutePath);
+        $directories = $this->disk()->allDirectories($absolutePath);
+
+        foreach (array_merge($directories, $files) as $childPath) {
+            $this->authorize($user, 'delete', $this->relativeFromAbsolute($childPath));
+        }
+
+        foreach ($files as $file) {
+            $this->disk()->delete($this->thumbnailPath($file));
+        }
+
+        $this->disk()->deleteDirectory($absolutePath);
+    }
+
+    public function isFolderEmpty(mixed $user, string $path): bool
+    {
+        $path = $this->normalisePath($path);
+        if ($path === '') {
+            throw new InvalidFilePath('The configured root cannot be deleted.');
+        }
+
+        $this->authorize($user, 'delete', $path);
+        $absolutePath = $this->absolutePath($path);
+
+        if (! $this->disk()->directoryExists($absolutePath)) {
+            throw new InvalidFilePath('The selected item is not a folder.');
+        }
+
+        return $this->disk()->allFiles($absolutePath) === []
+            && $this->disk()->allDirectories($absolutePath) === [];
+    }
+
     public function move(mixed $user, string $source, string $destinationDirectory): string
     {
         $source = $this->normalisePath($source);
