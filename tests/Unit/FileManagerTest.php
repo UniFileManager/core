@@ -117,6 +117,31 @@ it('does not delete a folder that contains files or folders', function (): void 
     app(FileManager::class)->delete((object) ['id' => 1], 'occupied');
 })->throws(FolderNotEmpty::class, 'This folder is not empty. Delete or move its contents first.');
 
+it('recursively deletes a folder and its contents', function (): void {
+    Storage::disk('testing_core')->put('tenant-a/occupied/document.txt', 'contents');
+    Storage::disk('testing_core')->put('tenant-a/occupied/nested/child.txt', 'child');
+
+    app(FileManager::class)->deleteFolder((object) ['id' => 1], 'occupied');
+
+    expect(Storage::disk('testing_core')->directoryMissing('tenant-a/occupied'))->toBeTrue();
+});
+
+it('does not recursively delete a file', function (): void {
+    Storage::disk('testing_core')->put('tenant-a/document.txt', 'contents');
+
+    app(FileManager::class)->deleteFolder((object) ['id' => 1], 'document.txt');
+})->throws(InvalidFilePath::class, 'The selected item is not a folder.');
+
+it('detects whether a folder is empty', function (): void {
+    Storage::disk('testing_core')->makeDirectory('tenant-a/empty');
+    Storage::disk('testing_core')->put('tenant-a/occupied/document.txt', 'contents');
+
+    $manager = app(FileManager::class);
+
+    expect($manager->isFolderEmpty((object) ['id' => 1], 'empty'))->toBeTrue()
+        ->and($manager->isFolderEmpty((object) ['id' => 1], 'occupied'))->toBeFalse();
+});
+
 it('creates sequentially named folders without overwriting an existing folder', function (): void {
     Storage::disk('testing_core')->makeDirectory('tenant-a/New folder');
 

@@ -4,6 +4,11 @@ All notable changes to UniFileManager Core are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+- Added recursive folder deletion with authorization preflight for every descendant.
+
 ## v0.1.4 - 2026-08-28
 
 ### Fixed
